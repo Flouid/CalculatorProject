@@ -1,10 +1,20 @@
-import Client
-calculator = Client.Client()
+import calculator
+calculator_radian = calculator.Client()
+calculator_degrees = calculator.Client(angle_measure="degrees")
 
-print(calculator.parse("2"))                       # test the form a
-print(calculator.parse("3(4)"))                    # test the form a(b)
-print(calculator.parse("(5)6"))                    # test the form (b)a
-print(calculator.parse("7(8)9(10)"))               # test the form a(b)c(d)
-print(calculator.parse("11(12)13(14"))             # test the form a(b)c(d
-print(calculator.parse("15 + sin(16) + 17"))       # test the form a + sin(b) + c
+statements_to_test = "1", \
+                     "2(3", \
+                     "4(5+6(7))8", \
+                     "sin(15)", \
+                     "2sin(90)", \
+                     "2sin(2\u03C0", \
+                     "sin(3\u03C0)(2)", \
+                     "\u03C0", \
+                     "\u03C0\u03C0", \
+                     "\u03C0\u03C0\u03C0", \
+                     "\u03C0\u03C0\u03C0\u03C0",\
+                     "sin(2\u03C0)sin(\u03C0)"
+
+for statement in statements_to_test:
+    print(calculator_radian.parse(statement))
 
