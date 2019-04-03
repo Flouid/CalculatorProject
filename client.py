@@ -1,5 +1,5 @@
 import calculator
-test = calculator.Client()
+test = calculator.Client(angle_measure="degrees")
 
 while True:
     statement = input()
