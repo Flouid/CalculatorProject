@@ -1,4 +1,5 @@
 import math
+import re
 
 
 class Client:
@@ -15,7 +16,7 @@ class Client:
     valid_characters = "1234567890" \
                        "\u03C0"  # pi
     unicode_characters = "\u03C0"
-    valid_functions = "sin(", "cos("
+    valid_functions = "sin", "cos"
 
     def __init__(self, verbose=default_verbose, angle_measure=default_angle_measure, round_to=default_round_to):
         self.verbose = verbose
@@ -28,7 +29,7 @@ class Client:
         # Removes whitespace if there is any
         statement = statement.replace(" ", "")
 
-        # Ensures all parentheses closed
+        # Ensures final parentheses closed
         if "(" in statement:
             if statement.find(")", statement.rfind("(")) == -1:
                 statement = statement + ")"
@@ -61,9 +62,9 @@ class Client:
 
         # Runs parsing logic on every function
         for function in self.valid_functions:
-
-            # Ensures there is a multiplication operator between the beginning of every function and any coefficients
             if function in statement:
+
+                # Ensures there is a multiplication operator between all instances of the function and any coefficients
                 count = statement.count(function[0])
                 position = 1
                 for i in range(0, count):
@@ -72,18 +73,17 @@ class Client:
                         statement = statement[:position] + "*" + statement[position:]
                         position += 2  # account for new * character and move position to just after the first letter
 
+                # Converts all instances of the function to their decimal values and replaces them
+                terms = re.split('(\\*|\\+|-|/)', statement)
+                for i in range(0, len(terms) - 1):
+                    print(terms[i])
+                    if terms[i].count("(") > terms[i + 1].count(")"):
+                        print("i should do something about this")
+                        terms[i:i + 2] = [''.join(terms[i:i + 2])]
+
+                print(terms)
+
         result = round(eval(statement), self.round_to)
         if float(result).is_integer():  # removes unnecessary zeros if the result is an integer
             result = int(result)
         return result
-
-    def ensure_function_coefficients_have_operators(self, function, statement):
-        if function in statement:
-            # Ensures there is a multiplication operator between the coefficient and the sin() if there is any
-            count = statement.count(function[0])
-            position = 1
-            for i in range(0, count):
-                position = statement.find(function[0], position)
-                if (statement[position - 1] in self.valid_characters) | (statement[position - 1] == ")"):
-                    statement = statement[:position] + "*" + statement[position:]
-                    position += 2  # account for new * character and move position to just after the first letter

@@ -8,8 +8,7 @@ statements_to_test = "1", \
                      "\u03C0", \
                      "\u03C0\u03C0", \
                      "\u03C0\u03C0\u03C0", \
-                     "\u03C0\u03C0\u03C0\u03C0",\
-                 #    "sin(2\u03C0)sin(\u03C0)", \
+                     "\u03C0\u03C0\u03C0\u03C0", "2sin(\u03C0 - (\u03C0/2))sin(\u03C0)"
 
 for statement in statements_to_test:
     print(calculator_radian.parse(statement))
