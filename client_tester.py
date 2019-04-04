@@ -1,19 +1,33 @@
 import calculator
-calculator_radian = calculator.Client()
-calculator_degrees = calculator.Client(angle_measure="degrees")
+calculator_radian = calculator.Calculator()
+calculator_degrees = calculator.Calculator(angle_measure="degrees")
+
 
 statements_to_test = "1", \
                      "2(3", \
                      "4(5+6(7))8", \
-                     "\u03C0", \
-                     "\u03C0\u03C0", \
-                     "\u03C0\u03C0\u03C0", \
-                     "\u03C0\u03C0\u03C0\u03C0", "2sin(\u03C0 - (\u03C0/2))sin(\u03C0)"
+                     "pi", \
+                     "pi pi", \
+                     "pi pi pi", \
+                     "\u03C0\u03C0\u03C0\u03C0", \
+                     "2sin(\u03C0 - (\u03C0/2))sin(\u03C0)", \
+                     "4sin(15sin((4 + 5)/3) + sin(pi)", \
+                     "2cos(4pi)", \
+                     "2tan(2pi)", \
+                     "arcsin(1", \
+                     "sin(cos(tan(1"
 
-for statement in statements_to_test:
-    print(calculator_radian.parse(statement))
+statement_answers = 1, 6, 1504, 3.1416, 9.8696, 31.0063, 97.4091, 0, 3.4184, 2, 0, 1.5708, 0.0134
 
-# print(calculator_radian.parse("cos(\u03C0/4) + cos(\u03C0)sin(2\u03C0)"))
-# print("cos(\u03C0/4) + cos(\u03C0)sin(2\u03C0)".find("sin(", 0))
-# print("cos(\u03C0/4) + cos(\u03C0)sin(2\u03C0)".find(""))
+passed = "passed"
+for i in range(0, len(statements_to_test)):
+    answer = calculator_radian.parse(statements_to_test[i])
+    if answer != statement_answers[i]:
+        print(statements_to_test[i] + " failed")
+        print(str(answer) + " is not equal to " + str(statement_answers[i]))
+        print()
+        passed = "failed"
+    else:
+        print(str(answer) + " is correct")
 
+print(passed)
