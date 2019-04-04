@@ -15,5 +15,12 @@ print()
 
 terms = re.split('(\\*|\\+|-|/)', "2*sin(\u03C0 - (\u03C0/2))*sin(\u03C0)")
 position = 0
-while position < len(terms):
-    print(terms[position])
+while position < len(terms) - 1:
+    print(terms)
+    if (terms[position].count("(") > terms[position + 1].count(")")) & (terms[position].count("(") > 0):
+        terms[position:position + 2] = [''.join(terms[position:position + 2])]
+    elif (terms[position].count("(") == terms[position + 1].count(")")) & (terms[position].count("(") > 0):
+        terms[position:position + 2] = [''.join(terms[position:position + 2])]
+        position += 1
+    else:
+        position += 1
