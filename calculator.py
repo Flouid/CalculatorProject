@@ -14,9 +14,9 @@ class Calculator:
 
     # Lists of characters, functions, and variables that the calculator should be able to parse
     valid_characters = '1234567890\u03C0'
-    valid_variable_names = 'pi', ''  # these need to be lists in order for the logic to work
+    valid_names = 'pi', 'root('
     unicode_characters = '\u03C0'
-    valid_functions = 'sin(', 'cos(', 'tan(', 'arcsin(', 'arccos(', 'arctan('
+    valid_functions = 'sin(', 'cos(', 'tan(', 'arcsin(', 'arccos(', 'arctan(', '\u221A('
 
     def __init__(self, verbose=default_verbose, angle_measure=default_angle_measure, round_to=default_round_to):
         self.verbose = verbose
@@ -35,13 +35,17 @@ class Calculator:
             if self.verbose:
                 print('removed the white space from ' + statement)
 
-        # Replaces word representations of variables with single character unicode representations
-        for var in self.valid_variable_names:
-            if var in statement:
-                if var == 'pi':
-                    statement = statement.replace(var, '\u03C0')
+        # Replaces names of variables with single character unicode representations
+        for name in self.valid_names:
+            if name in statement:
+                if name == 'pi':
+                    statement = statement.replace(name, '\u03C0')
                     if self.verbose:
                         print('replaced pi with \u03C0 in ' + statement)
+                if name == 'root(':
+                    statement = statement.replace(name, '\u221A(')
+                    if self.verbose:
+                        print('replaced root( with \u221A( in ' + statement)
 
         # Logic for dealing with parentheses
         if '(' in statement:
@@ -125,6 +129,8 @@ class Calculator:
                     if function in terms[i]:
 
                         inside = self.parse(terms[i][len(function):len(terms[i]) - 1], False)
+                        if self.verbose:
+                            print('the inside of the ' + function + ' function is ' + str(inside))
 
                         if function == 'sin(':
                             if self.angle_measure == 'radians':
@@ -173,6 +179,14 @@ class Calculator:
                                 terms[i] = math.atan(inside * (math.pi/180))
                             if self.verbose:
                                 print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
+
+                        if function == '\u221A(':
+                            if self.angle_measure == 'radians':
+                                terms[i] = math.sqrt(inside)
+                            else:
+                                terms[i] = math.sqrt(inside * (math.pi/180))
+                            if self.verbose:
+                                print('evaluated \u221A(' + str(inside) + ') as ' + str(terms[i]))
 
                 # Recombines the list of terms into a statement string
                 statement = ''
