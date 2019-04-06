@@ -12,11 +12,13 @@ class Calculator:
     default_angle_measure = 'radians'
     default_round_to = 4
 
-    # Lists of characters, functions, and variables that the calculator should be able to parse
-    valid_characters = '1234567890\u03C0'
-    valid_names = 'pi', 'root('
-    unicode_characters = '\u03C0'
-    valid_functions = 'sin(', 'cos(', 'tan(', 'arcsin(', 'arccos(', 'arctan(', '\u221A('
+    # Lists of characters, functions, variables, operators etc... that the calculator should be able to parse
+    valid_characters = '1234567890\u03C0\U0001D452'
+    valid_names = 'pi', 'root(', 'e'
+    unicode_characters = '\u03C0', '\U0001D452'
+    valid_functions = 'sin(', 'cos(', 'tan(', 'arcsin(', 'arccos(', 'arctan(', '\u221A(', '^(', 'log(', 'ln('
+    valid_operators = '+-/*'
+    special_functions = '^(', ''  # these are valid functions but need to be handled with different syntax
 
     def __init__(self, verbose=default_verbose, angle_measure=default_angle_measure, round_to=default_round_to):
         self.verbose = verbose
@@ -28,6 +30,9 @@ class Calculator:
         """Passed the user's statement and attempts to parse it into something evaluable.
         The rounding argument is meant for recursive calls. There are several points in this function
         when it has to call itself, when it does so it cannot lose precision at intermediate steps by rounding"""
+
+        if self.verbose & rounding:
+            print('evaluating ' + statement)
 
         # Removes whitespace if there is any
         if ' ' in statement:
@@ -46,6 +51,10 @@ class Calculator:
                     statement = statement.replace(name, '\u221A(')
                     if self.verbose:
                         print('replaced root( with \u221A( in ' + statement)
+                if name == 'e':
+                    statement = statement.replace(name, '\U0001D452')
+                    if self.verbose:
+                        print('replaced e with \U0001D452 in ' + statement)
 
         # Logic for dealing with parentheses
         if '(' in statement:
@@ -82,11 +91,15 @@ class Calculator:
                 if self.verbose:
                     print('ensured proper operators around ' + character + ' in ' + statement)
 
-        # Converts the character for pi or the word 'pi' into the mathematical value for pi.
+        # Converts the character for pi into the mathematical value for pi.
         if '\u03C0' in statement:
             statement = statement.replace('\u03C0', str(math.pi))
             if self.verbose:
                 print('pi converted to numerical value in ' + statement)
+        if '\U0001D452' in statement:
+            statement = statement.replace('\U0001D452', str(math.e))
+            if self.verbose:
+                print('e converted into numerical value in ' + statement)
 
         # Runs parsing logic on every function
         for function in self.valid_functions:
@@ -98,20 +111,21 @@ class Calculator:
                         continue
 
                 # Ensures there is a multiplication operator between all instances of the function and any coefficients
-                count = statement.count(function[0])
-                position = 1
-                i = 0
-                while i < count:
-                    position = statement.find(function[0], position)
-                    if position == -1:
-                        break
-                    elif (statement[position - 1] in self.valid_characters) | (statement[position - 1] == ')'):
-                        statement = statement[:position] + '*' + statement[position:]
-                        position += 2  # account for new * character and move position to just after the first letter
-                    else:
-                        position += 1  # check the next character
-                if self.verbose:
-                    print('ensured all instances of ' + function + ' have proper operators in ' + statement)
+                if function not in self.special_functions:
+                    count = statement.count(function[0])
+                    position = 1
+                    i = 0
+                    while i < count:
+                        position = statement.find(function[0], position)
+                        if position == -1:
+                            break
+                        elif (statement[position - 1] in self.valid_characters) | (statement[position - 1] == ')'):
+                            statement = statement[:position] + '*' + statement[position:]
+                            position += 2  # account for new * character and move position to just after the next letter
+                        else:
+                            position += 1  # check the next character
+                    if self.verbose:
+                        print('ensured all instances of ' + function + ' have proper operators in ' + statement)
 
                 # Converts the statement to a list of terms separated by operators
                 terms = re.split('([*+\-/])', statement)
@@ -128,65 +142,92 @@ class Calculator:
                 for i in range(0, len(terms)):
                     if function in terms[i]:
 
-                        inside = self.parse(terms[i][len(function):len(terms[i]) - 1], False)
-                        if self.verbose:
-                            print('the inside of the ' + function + ' function is ' + str(inside))
-
-                        if function == 'sin(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.sin(inside)
-                            else:
-                                terms[i] = math.sin(inside * (math.pi/180))
+                        if function not in self.special_functions:
+                            inside = self.parse(terms[i][len(function):len(terms[i]) - 1], False)
                             if self.verbose:
-                                print('evaluated sin(' + str(inside) + ') as ' + str(terms[i]))
+                                print('the inside of the ' + function + ' function is ' + str(inside))
 
-                        if function == 'cos(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.cos(inside)
-                            else:
-                                terms[i] = math.cos(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated cos(' + str(inside) + ') as ' + str(terms[i]))
+                            if function == 'sin(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.sin(inside)
+                                else:
+                                    terms[i] = math.sin(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated sin(' + str(inside) + ') as ' + str(terms[i]))
 
-                        if function == 'tan(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.tan(inside)
-                            else:
-                                terms[i] = math.tan(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated tan(' + str(inside) + ') as ' + str(terms[i]))
+                            if function == 'cos(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.cos(inside)
+                                else:
+                                    terms[i] = math.cos(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated cos(' + str(inside) + ') as ' + str(terms[i]))
 
-                        if function == 'arcsin(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.asin(inside)
-                            else:
-                                terms[i] = math.asin(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
+                            if function == 'tan(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.tan(inside)
+                                else:
+                                    terms[i] = math.tan(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated tan(' + str(inside) + ') as ' + str(terms[i]))
 
-                        if function == 'arccos(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.acos(inside)
-                            else:
-                                terms[i] = math.acos(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
+                            if function == 'arcsin(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.asin(inside)
+                                else:
+                                    terms[i] = math.asin(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
 
-                        if function == 'arctan(':
-                            if self.angle_measure == 'radians':
-                                terms[i] = math.atan(inside)
-                            else:
-                                terms[i] = math.atan(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
+                            if function == 'arccos(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.acos(inside)
+                                else:
+                                    terms[i] = math.acos(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
 
-                        if function == '\u221A(':
-                            if self.angle_measure == 'radians':
+                            if function == 'arctan(':
+                                if self.angle_measure == 'radians':
+                                    terms[i] = math.atan(inside)
+                                else:
+                                    terms[i] = math.atan(inside * (math.pi/180))
+                                if self.verbose:
+                                    print('evaluated arcsin(' + str(inside) + ') as ' + str(terms[i]))
+
+                            if function == '\u221A(':
                                 terms[i] = math.sqrt(inside)
-                            else:
-                                terms[i] = math.sqrt(inside * (math.pi/180))
-                            if self.verbose:
-                                print('evaluated \u221A(' + str(inside) + ') as ' + str(terms[i]))
+                                if self.verbose:
+                                    print('evaluated \u221A(' + str(inside) + ') as ' + str(terms[i]))
+
+                            if function == 'log(':
+                                terms[i] = math.log10(inside)
+                                if self.verbose:
+                                    print('evaluated log(' + str(inside) + ') as ' + str(terms[i]))
+
+                            if function == 'ln(':
+                                terms[i] = math.log(inside)
+                                if self.verbose:
+                                    print('evaluate ln(' + str(inside) + ') as ' + str(terms[i]))
+                                    pass
+
+                        # Parsing logic for special functions with part of their evaluation outside the parenthesis
+                        # I.e functions like 4^(2) must become math.pow(4, 2)
+                        else:
+
+                            if function == '^(':
+                                position = terms[i].find(function)  # find where the function occurs in the term
+                                start_position = 0  # assume the beginning of the term is the base
+                                if '(' in terms[i][:position]:
+                                    # move the start position past any left parentheses in the term before the function
+                                    start_position = terms[i].find('(') + 1
+                                base = self.parse(terms[i][start_position:position], False)
+                                exponent = self.parse(terms[i][position + len(function):len(terms[i]) -
+                                                               terms[i].count(")", position)], False)
+                                # takes the part of the term ignored earlier and concatonates the evaluated function
+                                terms[i] = terms[i][:start_position] + str(math.pow(base, exponent))
+                                if self.verbose:
+                                    print(str(base) + '^(' + str(exponent) + ') converted to ' + terms[i])
 
                 # Recombines the list of terms into a statement string
                 statement = ''

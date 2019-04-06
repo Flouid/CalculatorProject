@@ -1,5 +1,18 @@
-This file is purely a list of ways that I could easily improve the calculator but go beyond the scope of a ti84
+This file is purely a list of ways that I could improve the calculator but go beyond the scope of a ti84
 
 
 # add reciprocal trig functions (csc(), sec(), cot()...)
+# represent answers in terms of constants like pi
+# evaluate limits
+# algebra solver
 
+
+Here are things that I will need to approach in a novel way or I am not sure how I will implement
+
+
+# functions like logBASE(), nDeriv(), fnInt()... etc use nonstandard notation and will need to be properly adapted
+# 2nd and alpha modes?
+# storing/dealing with variables
+# graphing
+# all the misc menus and functions it has, like the stats section or the math section etc
+# PROGRAMMING!!!
