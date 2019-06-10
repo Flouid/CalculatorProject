@@ -42,3 +42,4 @@ for i in range(0, len(statements_to_test)):
         print()
 
 print(passed)
+print(calculator_radian.result_history)

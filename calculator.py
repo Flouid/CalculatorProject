@@ -7,6 +7,9 @@ class Calculator:
     The primary purpose of this code is to take some statement from the user and parse it into
     a statement that python's eval() function can recognize and evaluate."""
 
+    # Instance variables
+    result_history = []
+
     # default modes
     default_verbose = False
     default_angle_measure = 'radians'
@@ -33,6 +36,7 @@ class Calculator:
 
         if self.verbose & rounding:
             print('evaluating ' + statement)
+            print()
 
         # Removes whitespace if there is any
         if ' ' in statement:
@@ -91,11 +95,13 @@ class Calculator:
                 if self.verbose:
                     print('ensured proper operators around ' + character + ' in ' + statement)
 
-        # Converts the character for pi into the mathematical value for pi.
+        # Converts the character for pi into the mathematical value for pi
         if '\u03C0' in statement:
             statement = statement.replace('\u03C0', str(math.pi))
             if self.verbose:
                 print('pi converted to numerical value in ' + statement)
+
+        # Converts the character for e into the mathematical value for e
         if '\U0001D452' in statement:
             statement = statement.replace('\U0001D452', str(math.e))
             if self.verbose:
@@ -138,10 +144,16 @@ class Calculator:
                 if self.verbose:
                     print('converted the statement to a list of terms ' + str(terms))
 
+                # Checks for terms surrounded by parentheses and replaces them with their parsed value
+                for i in range(len(terms)):
+                    if (terms[i][0] == '(') & (terms[i][len(terms[i]) - 1] == ')'):
+                        terms[i] = str(self.parse(terms[i][1:len(terms[i]) - 1], False))
+
                 # Replaces function terms with their decimal values
-                for i in range(0, len(terms)):
+                for i in range(len(terms)):
                     if function in terms[i]:
 
+                        # Logic for normal functions with the argument inside the parentheses
                         if function not in self.special_functions:
                             inside = self.parse(terms[i][len(function):len(terms[i]) - 1], False)
                             if self.verbose:
@@ -201,11 +213,15 @@ class Calculator:
                                     print('evaluated \u221A(' + str(inside) + ') as ' + str(terms[i]))
 
                             if function == 'log(':
+                                # if inside < 0:
+                                    # raise AssertionError("Cannot take the log of a negative value")
                                 terms[i] = math.log10(inside)
                                 if self.verbose:
                                     print('evaluated log(' + str(inside) + ') as ' + str(terms[i]))
 
                             if function == 'ln(':
+                                if inside < 0:
+                                    raise AssertionError("Cannot take the natural log of a negative value")
                                 terms[i] = math.log(inside)
                                 if self.verbose:
                                     print('evaluate ln(' + str(inside) + ') as ' + str(terms[i]))
@@ -214,7 +230,6 @@ class Calculator:
                         # Parsing logic for special functions with part of their evaluation outside the parenthesis
                         # I.e functions like 4^(2) must become math.pow(4, 2)
                         else:
-
                             if function == '^(':
                                 position = terms[i].find(function)  # find where the function occurs in the term
                                 start_position = 0  # assume the beginning of the term is the base
@@ -224,7 +239,7 @@ class Calculator:
                                 base = self.parse(terms[i][start_position:position], False)
                                 exponent = self.parse(terms[i][position + len(function):len(terms[i]) -
                                                                terms[i].count(")", position)], False)
-                                # takes the part of the term ignored earlier and concatonates the evaluated function
+                                # takes the part of the term ignored earlier and concatenates the evaluated function
                                 terms[i] = terms[i][:start_position] + str(math.pow(base, exponent))
                                 if self.verbose:
                                     print(str(base) + '^(' + str(exponent) + ') converted to ' + terms[i])
@@ -232,14 +247,20 @@ class Calculator:
                 # Recombines the list of terms into a statement string
                 statement = ''
                 for term in terms:
-                    statement = statement + str(term)
+                    statement += str(term)
+
         if self.verbose & rounding:
             print('final statement is ' + statement)
             print()
+
         result = eval(statement)
+
         if float(result).is_integer():  # removes unnecessary zeros if the result is an integer
             result = int(result)
+
+        self.result_history += [result]
+
         if rounding:
-            return round(result, self.round_to)
-        else:
-            return result
+            result = round(result, self.round_to)
+
+        return result
